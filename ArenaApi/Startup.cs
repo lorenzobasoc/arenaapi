@@ -28,7 +28,7 @@ namespace ArenaApi
             services.AddScoped<ExceptionsMiddleware>();
             services.AddScoped<IFighterRepository, FighterRepository>();
             services.AddDbContext<AppDbContext>(options => {
-                options.UseNpgsql("Host=localhost;Database=arena;Username=lorenzobasoc;Password=ciao");
+                options.UseNpgsql("Host=localhost;Database=;Username=;Password=");
             });
             services.AddControllers();
         }
