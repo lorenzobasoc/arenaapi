@@ -34,21 +34,6 @@ namespace ArenaApi
         }
 
         public void Configure(IApplicationBuilder app) {
-            /*
-            *  exception middleware 
-            *   try { 
-                 next();
-               }catch(NotFOundExc){
-                   build 404 response,
-               }
-
-               try { 
-                 next();
-               }catch(NotAuthorizedExc){
-                   build 401 response,    //piglia le eccezioni lanciate da [Authorized] sui controller, vedi documentaizone
-               }
-            *
-            */
             app.UseMiddleware<ExceptionsMiddleware>();
             app.UseRouting();
             app.UseEndpoints(endpoints => {
