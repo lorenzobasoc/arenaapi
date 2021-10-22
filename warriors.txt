@@ -1,0 +1,48 @@
+create table "Fighters" (
+	"Id" serial,
+	"Name" text,
+	"Pv"	int,
+	"Speed" int,
+	"Strength" int, 
+	"DamagePercentage" int, 
+	"MaximumPower" int, 
+	"Type" text
+);
+  
+
+{
+    "pv": 100,
+    "speed": 92,
+    "name": "Spigola",
+    "power": 33,
+    "type": "Wizard"
+  },
+  {
+    "pv": 100,
+    "speed": 95,
+    "name": "Sandrino",
+    "power": 30,
+    "type": "Wizard"
+  },
+  {
+    "pv": 100,
+    "speed": 80,
+    "name": "Gianni",
+    "power": 20,
+    "type": "Warrior"
+  },
+  {
+    "pv": 100,
+    "speed": 90,
+    "name": "Marione",
+    "power": 35,
+    "type": "Wizard"
+  },
+  {
+    "pv": 100,
+    "speed": 80,
+    "name": "Ragno",
+    "power": 30,
+    "type": "Ork"
+  }
+
