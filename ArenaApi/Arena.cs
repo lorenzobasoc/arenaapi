@@ -1,56 +1,42 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using ArenaApi.DataAccess;
 using ArenaApi.Models;
 using Microsoft.EntityFrameworkCore;
-using ArenaApi.Interfaces;
-/*
-    To do:
-    - Finire il CRUD
-    - Arena controller 
-    - Check sugli input quando inserisci un nuovo fighter
-    - Middleware che piglia le eccezioni
-    - JWT
-    - Logging
-*/
+
 namespace ArenaApi
 {
     public class Arena
     {
         public List<Fighter> Fighters { get; private set; }
-        public static List<Action> Actions { get; private set; }
-        public  bool endGame = false;
-        private event Action<Fighter> Won;
+        public List<ArenaAction> Actions { get; private set; }
+        public  bool running = false;
+        private event Action<Fighter, Arena> Won;
         private static readonly AppDbContext _db = GenerateDb();
 
         public Arena() { }
 
         public async Task Start(){
-            endGame = true;
-            Actions = new List<Action>();
+            running = true;
+            Actions = new List<ArenaAction>();
             Fighters = new List<Fighter>();
             var entityFighters  = await GetFightersFromDb();
              foreach (var f in entityFighters){
-                Fighters.Add(Utilities.FromEntityToModel(f));
+                Fighters.Add(FighterMapper.FromEntityToModel(f));
             }
             Fighters = Fighters.OrderBy(o => o.Speed).ToList(); 
             Won += HandleWon;
             AttachMethodsToFightersEvents(this); 
             var currentAttack = Fighters.Count - 1;
-            while (endGame) {
-                Thread.Sleep(1000);
-                Again:
-                var randomPosition = new Random().Next(0, Fighters.Count); 
-                if (randomPosition == currentAttack) {
-                    goto Again;
-                }
+            while (running) {
+                await Task.Delay(1000);
+                var randomPosition = GetNextRandomFighter(currentAttack);
                 var attacker = Fighters[currentAttack];
                 var attacked = Fighters[randomPosition];
-                attacked.Fight(attacker);
-                if (attacked.Pv <= 0){
+                attacked.Fight(attacker, this);
+                if (attacked.IsDead){
                     Fighters.Remove(attacked);
                 }
                 if (currentAttack == 0) {
@@ -59,27 +45,34 @@ namespace ArenaApi
                     currentAttack--;
                 }
                 if (Fighters.Count == 1) {
-                    Won?.Invoke(Fighters[0]);
-                    endGame = false;
+                    Won?.Invoke(Fighters[0], this);
+                    running = false;
                 }
             }
         }
 
-        public string Status(){
-            if (endGame){
-                return "L'arena è in esecuzione";
-            } else {
-                return "L'arena non è in esecuzione";
-            }
+        public bool Status(){
+            return running;
         }
 
         private static async Task<List<FighterEntity>> GetFightersFromDb(){
             return await _db.Fighters.ToListAsync();
         }
+
+        private int GetNextRandomFighter(int currentAttack){
+            int randomPosition;
+            while (true){
+                randomPosition = new Random().Next(0, Fighters.Count); 
+                if (randomPosition != currentAttack) {
+                    break;
+                }
+            }
+            return randomPosition;
+        }
         
         public static AppDbContext GenerateDb() {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql("Host=localhost;Database=arena;Username=lorenzobasoc;Password=ciao")
+            .UseNpgsql("Host=localhost;Database=arena;Username=;Password=")
             .Options;
         return new AppDbContext(options);
         }
@@ -91,25 +84,25 @@ namespace ArenaApi
             }
         }
     
-        private static void HandleDie(Fighter f){
+        private static void HandleDie(Fighter f, Arena arena){
             var message = $"{f.Name} è morto!";
             var time = DateTime.Now;
-            var newAction = new Action(time, message); 
-            Actions.Add(newAction);
+            var newAction = new ArenaAction(time, message); 
+            arena.Actions.Add(newAction);
          }
 
-        private static void HandleDamage(Fighter attacked, Fighter attacker, int damage){ 
+        private static void HandleDamage(Fighter attacked, Fighter attacker, int damage, Arena arena){ 
             var message = $"{attacker.Name} infligge {damage} punti di danno a {attacked.Name}. A {attacked.Name} rimangono {attacked.Pv} pv. ";
             var time = DateTime.Now;
-            var newAction = new Action(time, message);
-            Actions.Add(newAction);
+            var newAction = new ArenaAction(time, message);
+            arena.Actions.Add(newAction);
         }
 
-        private static void HandleWon(Fighter f){ 
+        private static void HandleWon(Fighter f, Arena arena){ 
             var message = $"***LA LOTTA è TERMINATA***, Il vincitore dell'arena è {f.Name}";
             var time = DateTime.Now;
-            var newAction = new Action(time, message); 
-            Actions.Add(newAction);
+            var newAction = new ArenaAction(time, message); 
+            arena.Actions.Add(newAction);
         }
     }
 }

@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.OpenApi.Models;
 using ArenaApi.DataAccess;
 using ArenaApi.Repositories;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
 using ArenaApi.Interfaces;
 using ArenaApi.Middlewares;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System;
 
 namespace ArenaApi
 {
@@ -28,14 +25,29 @@ namespace ArenaApi
             services.AddScoped<ExceptionsMiddleware>();
             services.AddScoped<IFighterRepository, FighterRepository>();
             services.AddDbContext<AppDbContext>(options => {
-                options.UseNpgsql("Host=localhost;Database=;Username=;Password=");
+                options.UseNpgsql("Host=localhost;Database=arena;Username=;Password=");
             });
             services.AddControllers();
+            services.AddAuthentication(options =>{
+                options.DefaultAuthenticateScheme = "JwtBearer";
+                options.DefaultChallengeScheme = "JwtBearer";
+            }).AddJwtBearer("JwtBearer", JwtBearerOptions => {
+                JwtBearerOptions.TokenValidationParameters = new TokenValidationParameters{
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("ciaggggggggggggggggggggggggggggggo")),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.FromMinutes(5),
+                };
+            });
         }
 
         public void Configure(IApplicationBuilder app) {
             app.UseMiddleware<ExceptionsMiddleware>();
             app.UseRouting();
+            app.UseAuthentication();
+            app.UseAuthorization();
             app.UseEndpoints(endpoints => {
                 endpoints.MapControllers();
             });

@@ -1,5 +1,4 @@
 using System;
-using System.Text.Json.Serialization;
 
 namespace ArenaApi.Models
 {
@@ -7,22 +6,23 @@ namespace ArenaApi.Models
     {
         public int MaximumPower { get; set;}
 
-        public override event Action<Fighter> Died;
-        public override event Action<Fighter, Fighter, int> Damaged;
+        public override event Action<Fighter, Arena> Died;
+        public override event Action<Fighter, Fighter, int, Arena> Damaged;
 
         public override int CalculateDamage(){
             return (int)(MaximumPower * new Random().NextDouble());        
         }
 
-        public override void Fight(Fighter attacker){
+         public override void Fight(Fighter attacker, Arena arena){
             var damage = attacker.CalculateDamage(); 
             if (damage < Pv){
                 Pv -= damage;
-                Damaged?.Invoke(this, attacker, damage);
+                Damaged?.Invoke(this, attacker, damage, arena);
             } else {
                 Pv = 0;
-                Damaged?.Invoke(this, attacker, damage);
-                Died?.Invoke(this);
+                IsDead = true;
+                Damaged?.Invoke(this, attacker, damage, arena);
+                Died?.Invoke(this, arena);
             }
         }
     }

@@ -3,25 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArenaApi.Models;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ArenaApi.Controllers
 {
+    [Authorize]
     [Route("[controller]/[action]")]
     [ApiController]
     public class ArenaController : Controller
     {
         private readonly Arena _arena;
-        private readonly ILogger<ArenaController> _logger;
 
-        public ArenaController(Arena arena, ILogger<ArenaController> logger) {
-            _logger = logger;
+        public ArenaController(Arena arena) {
             _arena = arena;
         }
 
         [HttpGet]
         public void Start() {
-            if (_arena.endGame){
+            if (_arena.running){
                 throw new InvalidOperationException("L'arena è già stata avviata.");
             } else {
                 _ = _arena.Start();
@@ -30,31 +29,41 @@ namespace ArenaApi.Controllers
 
         [HttpPost]
         public void Stop() {
-            if (_arena.endGame){
-                _arena.endGame = false;
+            if (_arena.running){
+                _arena.running = false;
             } else {
                 throw new InvalidOperationException("L'arena è già stata stoppata.");
             }
         }
-        // _logger.LogError()   _logger.LogInformation
 
         [HttpGet]
         public string Status() {
-            return _arena.Status();
+            if (_arena.Status()){
+                 return "L'arena è in esecuzione";
+            } else {
+                return "L'arena non è in esecuzione";
+            }
         }
+
         [HttpGet]
         public List<string> GetActions() {
-            return Arena.Actions
-                    .Select(a => a.ToString())
-                    .ToList();
+            if (_arena.Fighters is null){
+                return new List<string>();
+            } else {
+                return _arena.Actions
+                        .Select(a => a.ToString())
+                        .ToList();
+            }
         }
 
         [HttpGet("{n:int}")]
         public List<string> GetActions(int n) {   
-            if (n <= 0 || n > Arena.Actions.Count){
+            if (_arena.Fighters is null){
+                return new List<string>();
+            } else if (n <= 0 || n > _arena.Actions.Count){
                 return GetActions();
             } else {
-                return Arena.Actions
+                return _arena.Actions
                         .Take(n)
                         .Select(a => a.ToString())
                         .ToList();
@@ -63,9 +72,13 @@ namespace ArenaApi.Controllers
 
         [HttpGet]
         public List<Fighter> GetAliveFighters() {
-            return _arena.Fighters
-                        .Where(f => f.Pv > 0)
-                        .ToList();
+            if (_arena.Fighters is null){
+                return new List<Fighter>();
+            } else {
+                return _arena.Fighters
+                            .Where(f => !f.IsDead )
+                            .ToList();
+            }
         }
     }
 }

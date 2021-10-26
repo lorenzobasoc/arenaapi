@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.Json.Serialization;
 
 namespace ArenaApi.Models
 {
@@ -9,13 +8,13 @@ namespace ArenaApi.Models
         public int Pv { get; set; }
         public int Speed { get; set; }
         public string Name { get; set; }
+        public bool IsDead { get; set; }
         public string Type { get; set; }
 
-        public abstract void Fight(Fighter attacker);
+        public abstract void Fight(Fighter attacker, Arena arena);
         public abstract int CalculateDamage();
 
-        public abstract event Action<Fighter> Died;
-        public abstract event Action<Fighter, Fighter, int> Damaged;
-
+        public abstract event Action<Fighter, Arena> Died;
+        public abstract event Action<Fighter, Fighter, int, Arena> Damaged;
     }
 }

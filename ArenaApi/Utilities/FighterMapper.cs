@@ -3,7 +3,7 @@ using ArenaApi.Models;
 
 namespace ArenaApi
 {
-    public class Utilities
+    public class FighterMapper
     {
          public  static Fighter FromEntityToModel(FighterEntity fe){
              if (fe.Type == "Ork"){
@@ -40,8 +40,7 @@ namespace ArenaApi
                 throw new ArgumentException("Fighter's type is not valid.");
             }
         }
-   
-        public static FighterDto FromEntityToDto(FighterEntity fe){
+         public static FighterDto FromEntityToDto(FighterEntity fe){
              var instance = new FighterDto {
                 Id = fe.Id,
                 Pv = fe.Pv,
@@ -60,7 +59,7 @@ namespace ArenaApi
             }
             return instance;
         }
-
+        
         public static FighterEntity FromDtoToEntity(FighterDto f){
             var instance = new FighterEntity {
                 Id = f.Id,
@@ -88,13 +87,13 @@ namespace ArenaApi
         }
    
         public static void UpdateEntity(FighterEntity old, FighterEntity newEnt){
-                old.Pv = newEnt.Pv;
-                old.Speed = newEnt.Speed;
-                old.Name = newEnt.Name;
-                old.Strength = newEnt.Strength;
-                old.DamagePercentage = newEnt.DamagePercentage;
-                old.MaximumPower = newEnt.MaximumPower;
-                old.Type = newEnt.Type;
+            old.Pv = newEnt.Pv;
+            old.Speed = newEnt.Speed;
+            old.Name = newEnt.Name;
+            old.Strength = newEnt.Strength;
+            old.DamagePercentage = newEnt.DamagePercentage;
+            old.MaximumPower = newEnt.MaximumPower;
+            old.Type = newEnt.Type;
         }
     }
 }

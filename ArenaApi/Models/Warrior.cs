@@ -1,28 +1,34 @@
 using System;
-using System.Text.Json.Serialization;
 
 namespace ArenaApi.Models
 {
     public class Warrior : Fighter
     {
         public int DamagePercentage { get; set; }
+        private readonly int MIN_DAMAGE = 5;
 
-        public override event Action<Fighter> Died;
-        public override event Action<Fighter, Fighter, int> Damaged;
+        public override event Action<Fighter, Arena> Died;
+        public override event Action<Fighter, Fighter, int, Arena> Damaged;
 
         public override int CalculateDamage(){
-            return Pv * DamagePercentage / 100;        
+            var damage = Pv * DamagePercentage / 100;
+            if (damage >= MIN_DAMAGE){
+                return damage;
+            } else {
+                return MIN_DAMAGE;
+            }
         }
 
-        public override void Fight(Fighter attacker){
+        public override void Fight(Fighter attacker, Arena arena){
             var damage = attacker.CalculateDamage(); 
             if (damage < Pv){
                 Pv -= damage;
-                Damaged?.Invoke(this, attacker, damage);
+                Damaged?.Invoke(this, attacker, damage, arena);
             } else {
                 Pv = 0;
-                Damaged?.Invoke(this, attacker, damage);
-                Died?.Invoke(this);
+                IsDead = true;
+                Damaged?.Invoke(this, attacker, damage, arena);
+                Died?.Invoke(this, arena);
             }
         }
     }
